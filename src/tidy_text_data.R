@@ -7,27 +7,38 @@
 #
 #----------------------------------------------------------------------------
 
+source('src/globals.R')
+
 library(tidyverse)
+library(tidytext)
+library(SnowballC)
 
-# only read text_data.rds if not already in memory
-if (!exists('text_data')) {
-  text_data <- readRDS('data/text_data.rds')
-}
+# clean the data
+clean_text <- raw_text
+# add here additional cleaning stuff...
 
-# make text data frame with these columns:
-# source = blogs|news|twitter
-# line = line number from the original file
-# text = text lines from file
-text_df <-
-  seq_along(text_data) %>%
-  lapply(
-    function(i) {
-      n <- length(text_data[[i]])
-      list(
-        source = rep(names(text_data)[i], n),
-        line = 1:n,
-        text = text_data[[i]]
-      )
-    }
-  ) %>%
-  bind_rows()
+# tidy the data
+tidy_unigram <-
+  clean_text %>%
+  unnest_tokens(word, text)
+
+# if we want to stem the words
+tidy_unigram_stem <- tidy_unigram %>%
+  mutate(word_stem = wordStem(word))
+
+# saveRDS(tidy_unigram, paste0('data/tidy_text_data', ifelse(use_small_data, '_small', ''), '.rds'))
+
+# process 2-grams
+tidy_bigram <-
+  clean_text %>%
+  unnest_tokens(word, text, token = "ngrams", n = 2)
+# write_rds(tidy_bigram, paste0('data/tidy_text_data_2gram', ifelse(use_small_data, '_small', ''), '.rds'))
+
+# process 3-grams
+tidy_trigram <-
+  clean_text %>%
+  unnest_tokens(word, text, token = "ngrams", n = 3)
+# write_rds(tidy_trigram, paste0('data/tidy_text_data_3gram', ifelse(use_small_data, '_small', ''), '.rds'))
+
+
+

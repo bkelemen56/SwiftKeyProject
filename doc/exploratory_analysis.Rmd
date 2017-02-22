@@ -1,0 +1,375 @@
+---
+title: "Swift Key project"
+subtitle: "Exploratory analysis"
+author: "Bill Kelemen"
+date: "February 19, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE)
+```
+
+```{r global, echo=FALSE, cache=TRUE}
+# set to FALSE to use the process whole dataset
+use_small_data <- FALSE      # TRUE will use a small sub-set of the data (for development)
+train_pct = .25           # percentage of each file to use as training
+
+suppressMessages(library(stringr))
+suppressMessages(library(readr))
+
+suppressMessages(library(tidyverse))
+
+suppressMessages(library(tidytext))
+suppressMessages(library(wordcloud))
+suppressMessages(library(SnowballC))
+
+suppressMessages(library(gridBase))
+suppressMessages(library(grid))
+```
+
+```{r read_raw_data, cache=TRUE, echo=FALSE, dependson='global'}
+path = '../raw-data/final/en_US'
+file_types <- c('blogs', 'news', 'twitter')
+files <- c('en_US.blogs.txt', 'en_US.news.txt', 'en_US.twitter.txt')
+names(files) <- file_types
+
+# read the text files into a data frame (source, text)
+n <- if_else(rep(use_small_data, 3), c(1000L, 1500L, 3000L), c(as.integer(899288*train_pct), as.integer(1010242*train_pct), as.integer(2360148*train_pct)))
+raw_text <- data_frame(file = dir(path, full.names = TRUE)) %>%
+  mutate(source = gsub('(.*\\.)(.*)(\\..*)', '\\2', basename(file))) %>%
+  unnest(text = map2(file, n, function(f, n) { read_lines(f, n_max = n, progress = interactive()) })) %>%
+  select(source, text)
+```
+
+```{r tidy_data, cache=TRUE, echo=FALSE, dependson='read_raw_data'}
+# clean the data
+clean_text <- raw_text
+# TODO: add here additional cleaning stuff...
+# TODO: remove 'RT' that are re-twittes
+
+# tidy the data
+tidy_unigram <-
+  clean_text %>%
+  unnest_tokens(word, text)
+
+# if we want to stem the words
+#tidy_unigram_stem <- tidy_unigram %>%
+#  mutate(word_stem = wordStem(word))
+```
+
+```{r function_stats, echo = FALSE}
+# functions to return some stats on the files
+fsize <- function(x) as.integer(file.info(paste0(path, '/', files[x]))[1] / 1024 / 1024)
+nlines <- function(x) length(raw_text$text[raw_text$source == x])
+nwords <- function(x) nrow(tidy_unigram[tidy_unigram$source == x,])
+```
+
+```{r frequency_stats, echo = FALSE, cache = TRUE, dependson = 'tidy_data'}
+pretty_fmt <- function(df) {
+  str <- summarise(df, word = paste(paste0("'", word, "'", ' (', as.character(n), ')'), collapse = ', '))
+  str <- str_replace(str, ', $', '')
+  str <- str_replace(str, "(, )('[:alnum:]+' \\([:digit:]+\\))$", ' and \\2')
+  str
+}
+
+# TODO: optmize if/else if needed laterd
+get_word_freq <- function(tidy_dataset, n_words, rm.stop_words = FALSE) {
+  if (rm.stop_words) {
+    high_freq_words <- 
+      tidy_dataset %>%
+      anti_join(stop_words, by = 'word') %>%
+      filter(!str_detect(word, "^[0-9]*$")) %>%
+      count(word, sort = TRUE) %>%
+      ungroup() %>%
+      mutate(word = reorder(word, n)) %>%
+      top_n(n_words, n)
+  } else {
+    high_freq_words <- 
+      tidy_dataset %>%
+      filter(!str_detect(word, "^[0-9]*$")) %>%
+      count(word, sort = TRUE) %>%
+      ungroup() %>%
+      mutate(word = reorder(word, n)) %>%
+      top_n(n_words, n)
+  }
+  high_freq_words
+}
+
+get_word_freq_fmt <- function(tidy_dataset, n_words, rm.stop_words = FALSE) {
+  fmt <- tidy_dataset %>%
+    get_word_freq(n_words, rm.stop_words) %>%
+    pretty_fmt()
+  invisible(gc())
+  fmt
+}
+
+get_ratio_stop_words_to_non <- function() {
+  sw <- get_word_freq(tidy_unigram, 1, FALSE)$n[1]
+  nsw <- get_word_freq(tidy_unigram, 1, TRUE)$n[1]
+  format(round(sw / nsw, 0), nsmall=0) 
+}
+
+# pre-compute some stats that are then embedded in the report
+total_lines <- length(clean_text$text)
+total_unigrams <- nrow(tidy_unigram)
+mean_len_unigrams <- round(mean(str_length(tidy_unigram$word)), 1)
+top_10_words_inc_stop_words_fmt <- get_word_freq_fmt(tidy_unigram, 10)
+top_10_words_without_stop_words_fmt <- get_word_freq_fmt(tidy_unigram, 10, TRUE)
+ratio_stop_words_to_non_stop_words <- get_ratio_stop_words_to_non()
+```
+## 1. Executive summary
+
+This project will build an application to assist users when typing free form text, by predicting the next word based on previous seen words. The application will use machine learning techniques to train a model from a corpora of news, blogs and twitter data. This model will then be used to predict the next word based on the previous three words typed by the user.
+
+This milestone report contains the analysis performed on the data available, to better understand specific characteristics by exploring different aspects like frequencies of words, word pairs, triples, etc. The exploratory analysis was performed on the English version of the corpora. 
+
+Research was done on R packages that could be used for this phase and `tidytext` was selected as the main one to use.
+
+The next phase of the project will be to start building the predictive model. A preliminary proposal using Markov chains will be discussed as well as possible implementation requirements.
+
+## 2. Initial processing
+
+The corpora processed is the English version of the blogs, news and twitter files provided for the project.
+
+The raw corpora provided for this project consists of sample text collected in three files:
+
+filename | size (MB) | number of lines | number of words |
+---------|------|----------------|-----------------|
+`r files['blogs']` | `r fsize('blogs')` | `r nlines('blogs')` | `r nwords('blogs')` |
+`r files['news']` | `r fsize('news')` | `r nlines('news')` | `r nwords('news')` |
+`r files['twitter']` | `r fsize('twitter')` | `r nlines('twitter')` | `r nwords('twitter')` |
+
+Initially the three files were loaded into R and then processed with the `tidytext` package to understand frequencies and relationships of single words, bigrams and trigrams.
+
+The initial steps were:
+
+1. Load raw text files
+2. Clean raw text files
+3. Tidy the data for unigram analysis (single words)
+4. Tidy the data for bigram analysis
+5. Tidy the data for trigram analysis
+
+Additional cleaning of the data will continue in coming phases.
+
+## 3. Exploratory analysis
+
+### 3.1. Single words (unigram) analysis
+
+Initial analysis was performed on single words (unigrams) to understand the frequency of words in the corpora.
+
+Some of the statistics obtained on the unigram analysis were:
+
+* the total number of words in the corpora is `r total_unigrams`
+* the average length of the words is `r mean_len_unigrams`
+* the 10 most frequent words are [*stop words*](https://en.wikipedia.org/wiki/Stop_words) [`r top_10_words_inc_stop_words_fmt`]    
+* when removing all *stop words*, the 10 most frequent words are: [`r top_10_words_without_stop_words_fmt`]
+* the ratio of stop words:non-stop words is pretty high (`r ratio_stop_words_to_non_stop_words`:1)
+
+[*Stop words*](https://en.wikipedia.org/wiki/Stop_words) play an important role in word frequency  but in our application, we must keep them as they also must be predicted. 
+
+The following charts present this information visually, for the top 25 words, including and excluding stop words.
+
+
+#### 3.1.1. Analysis including stop words
+
+By including stop words, 'the' dominates all other words.
+
+```{r util_plot, echo = FALSE, cache = TRUE}
+# plots two charts side by side: worldcloud and frequency
+plot_worldcloud_and_bar_chart <- function(df, title, worldcloud_max_words = 100) {
+  par(mfrow=c(1, 2))
+  
+  set.seed(256)
+  df %>% with(wordcloud(word, n, max.words = worldcloud_max_words))
+  
+  plot.new()              
+  vps <- baseViewports()
+  p <- df %>%
+    top_n(25, n) %>%
+    ggplot(aes(word, n)) +
+      geom_bar(stat = "identity") +
+      labs(title = title) +
+      xlab(NULL) +
+      coord_flip()
+  
+  print(p, vp = vpStack(vps$figure,vps$plot))
+}
+```
+
+```{r plot_most_used_words_with_stopwords, echo=FALSE, cache=TRUE, dependson='tidy_data'}
+tidy_unigram %>%
+  filter(!str_detect(word, "^[0-9]*$")) %>%
+  count(word, sort = TRUE) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  top_n(200, n) %>%
+  plot_worldcloud_and_bar_chart('Most used words in all documents (with stop-words)')
+invisible(gc())
+```
+
+#### 3.1.2. Analysis excluding stop words
+
+```{r plot_most_used_words_without_stopwords, echo=FALSE, cache=TRUE, dependson='tidy_data'}
+tidy_unigram %>%
+  filter(!str_detect(word, "^[0-9]*$")) %>%
+  anti_join(stop_words, by = 'word') %>%
+  count(word, sort = TRUE) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  top_n(75, n) %>%
+  plot_worldcloud_and_bar_chart('Most used words in all documents (without stop-words)')
+invisible(gc())
+```
+
+```{r word_coverage, echo = FALSE, cache = TRUE, dependson='tidy_data'}
+# this is used later, but in order to fee upo
+
+# how frequent are stop words?
+td <- tidy_unigram %>%
+  count(word, sort = TRUE) %>%
+  mutate(freq = n / sum(n), freq_accum = cumsum(freq)) %>%
+  left_join(stop_words[stop_words$lexicon == 'snowball', ], by='word')
+
+# freq of stop words in the corpus ~43%
+total_pct_stop_words <- round(sum(td$freq[td$lexicon == 'snowball'], na.rm = TRUE) * 100, 1)
+# freg of non-stop words ~57%
+total_pct_non_stop_words <- 100 - total_pct_stop_words #sum(td$freq[is.na(td$lexicon)], na.rm = TRUE)
+
+# how many words to cover 50% of language
+coverage_50_pct <- nrow(td[td$freq_accum <= .5, ])
+coverage_90_pct <- nrow(td[td$freq_accum <= .9, ])
+
+pct_words_coverage_50_pct <- round(coverage_50_pct/total_unigrams * 100, 1)
+pct_words_coverage_90_pct <- round(coverage_90_pct/total_unigrams * 100, 2)
+
+# free mem
+if (!use_small_data) {
+  rm(tidy_unigram, td)
+  invisible(gc())
+}
+```
+
+### 3.2. Bigram analysis
+
+```{r bigram_calc, echo=FALSE, cache=TRUE, dependson='tidy_data'}
+# compute trigrams
+# process bigrams
+tidy_bigram <-
+  clean_text %>%
+  unnest_tokens(word, text, token = "ngrams", n = 2)
+
+# calculate some stats
+total_bigrams <- nrow(tidy_bigram)
+mean_len_bigrams <- round(mean(str_length(tidy_bigram$word)), 1)
+top_10_bigrams_fmt <- get_word_freq_fmt(tidy_bigram, 10)
+```
+
+Following, an analysis was performed on bigrams that are sequences of 2-words.
+
+* the total number of bigrams is `r total_bigrams`
+* the average length of the bigrams is `r mean_len_bigrams`
+* The 10 most frequent bigrams are: [`r top_10_bigrams_fmt`] and consist mostly of stop words
+
+```{r plot_most_used_bigrams, echo=FALSE, cache=TRUE, dependson='tidy_data'}
+tidy_bigram %>%
+  count(word, sort = TRUE) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  top_n(50, n) %>%
+  plot_worldcloud_and_bar_chart('Most used 2-grams in all documents')
+```
+
+```{r clean_bigram_mem, echo=FALSE, }
+if (!use_small_data) {
+  rm(tidy_bigram)
+  invisible(gc())
+}
+```
+
+### 3.3. Trigram analysis
+
+```{r trigram_calc, echo=FALSE, cache=TRUE, dependson='tidy_data'}
+# compute trigrams
+tidy_trigram <-
+  clean_text %>%
+  unnest_tokens(word, text, token = "ngrams", n = 3)
+
+# calculate some stats
+total_trigrams <- nrow(tidy_trigram)
+mean_len_trigrams <- round(mean(str_length(tidy_trigram$word)), 1)
+top_10_trigrams_fmt <- get_word_freq_fmt(tidy_trigram, 10)
+```
+
+Finally, an analysis was performed on trigrams that are sequences of 3-words.
+
+* the total number of trigrams is `r nrow(tidy_trigram)`
+* the average length of the trigrams is `r mean_len_trigrams`
+* The 10 most frequent trigrams are: [`r top_10_trigrams_fmt`]
+
+```{r plot_most_used_trigrams, echo=FALSE, cache=TRUE, dependson='tidy_data'}
+tidy_trigram %>%
+  count(word, sort = TRUE) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  top_n(50, n) %>%
+  plot_worldcloud_and_bar_chart('Most used 3-grams in all documents')
+```
+
+```{r clean_trigram_mem, echo=FALSE, }
+if (!use_small_data) {
+  rm(tidy_trigram)
+  invisible(gc())
+}
+```
+
+### 3.4. Word coverage
+
+We have a total of `r total_unigrams` unique words in the corpora. Computing the frequency and accumulated frequency of each word (sorted in descending order) provides these statistics:
+
+* total percentage of stop words: `r total_pct_stop_words`%
+* total percentage of non-stop words: `r total_pct_non_stop_words`%
+
+* total words to cover 50% of all word instances: `r coverage_50_pct` (`r pct_words_coverage_50_pct`%)
+* total words to cover 90% of all word instances: `r coverage_90_pct` (`r pct_words_coverage_90_pct`%)
+
+Although we're able to cover 90% of all words with a small percentage of unique words, in our particular problem, we need to take into account all other words that must be predicted.
+
+### 3.6. Foreign language words
+
+The package `textcat` can be used to detect the language of complete sentences in the corpora, but produces false positives. For example, running this package on a sample of 100 lines of text produces:
+
+```{r textcat, echo=FALSE, cache=TRUE, dependson='tidy_data'}
+library(textcat)
+lang <- textcat(clean_text$text[1:100])
+```
+
+```{r display_textcat, echo=FALSE}
+knitr::kable(data_frame(lang = lang) %>% group_by(lang) %>% count(sort = TRUE))
+rm(lang)
+```
+
+This process is computationally expensive: a simple empirical timing of `textcat` resulted in about 150/lines x second. Therefore processing the complete data-set would take about `r total_lines/150/60/60` hours.
+
+Another procedure is to perform a spell check with `aspell` but it is expected to also be computationally expensive (not verified).
+
+Finally a simple process could be to use `gsub` and a regular expression that matches words with non-English characters and removes them.
+
+### 3.7. Oportunities to improve coverage:
+
+This project is using a corpora of three predefined samples of news, blogs and twitter data. This corpora may not represent accurately the current English language usage among all users. There are other (open) data corpora available that can be used, and probably some smaller data-sets have been curated and provide better coverage. Also, depending on the usage of the final application, the model could be trained with more targeted data-sets.
+
+## 4. Model proposal
+
+During the initial research of NLP resources, and as recommended in the forum, I came across [[5]](http://www.decontextualize.com/teaching/dwwp/topics-n-grams-and-markov-chains/) that explains how to use python to state a similar problem using Markov chains. The procedure processes the text and extracts each n-gram and the words that follow. Then computes the probability of each word given the n-gram that preceded. Then this information can be structured into a Markov Chain to be used for predictions. This [YouTube resource](https://www.youtube.com/watch?v=dkUtavsPqNA&index=12&list=PL3CEFE83D76F8B515) also has interesting videos about NLP and in particular estimation of n-gram probabilities.
+
+One problem that must be solved is how to represent this information in a compact way to be deployed on limited memory systems. A possible solution may be to use [word2vec](https://en.wikipedia.org/wiki/Word2vec), [GLoVe](http://nlp.stanford.edu/projects/glove/) and/or PCA to produce a more compact data structure. This will be researched more for next phases of the project.
+
+## References
+
+1. Text Mining in R, A Tidy Approach, Julia Silge and David Robinson, http://tidytextmining.com/ 
+2. Tidy Data, Hadley Wickham, http://vita.had.co.nz/papers/tidy-data.pdf 
+3. CRAN Task View: Natural Language Processing, https://cran.r-project.org/web/views/NaturalLanguageProcessing.html
+4. Crash Introduction to markovchain R package, Giorgio Alfredo Spedicato, Ph.D C.Stat ACAS, 2017-01-22,  https://cran.r-project.org/web/packages/markovchain/vignettes/markovchainCrashIntro.pdf
+5. Topics: N-Grams and Markov chains, Allison Parrish,  http://www.decontextualize.com/teaching/dwwp/topics-n-grams-and-markov-chains/
+6. NLP course https://www.youtube.com/watch?v=dkUtavsPqNA&index=12&list=PL3CEFE83D76F8B515

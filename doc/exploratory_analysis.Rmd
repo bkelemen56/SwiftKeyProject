@@ -2,23 +2,22 @@
 title: "Swift Key project"
 subtitle: "Exploratory analysis"
 author: "Bill Kelemen"
-date: "February 19, 2017"
+date: "February 27, 2017"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning=FALSE)
+knitr::opts_chunk$set(echo = TRUE, warning=TRUE)
 ```
 
 ```{r global, echo=FALSE, cache=TRUE}
 # set to FALSE to use the process whole dataset
-use_small_data <- FALSE      # TRUE will use a small sub-set of the data (for development)
+use_small_data <- TRUE      # TRUE will use a small sub-set of the data (for development)
 train_pct = .25           # percentage of each file to use as training
 
+suppressMessages(library(tidyverse))
 suppressMessages(library(stringr))
 suppressMessages(library(readr))
-
-suppressMessages(library(tidyverse))
 
 suppressMessages(library(tidytext))
 suppressMessages(library(wordcloud))
@@ -29,16 +28,22 @@ suppressMessages(library(grid))
 ```
 
 ```{r read_raw_data, cache=TRUE, echo=FALSE, dependson='global'}
-path = '../raw-data/final/en_US'
+path = '../data'
 file_types <- c('blogs', 'news', 'twitter')
-files <- c('en_US.blogs.txt', 'en_US.news.txt', 'en_US.twitter.txt')
+
+mk_fname <- function(x) paste0(path, '/', x, '.train.', 
+                               ifelse(use_small_data, 'small', format(use_pct_data, decimal.mark = '_')), '.txt')
+
+files <- mk_fname(file_types)
+#files <- c(mk_fname('blogs'), mk_fname('news'), mk_fname('twitter'))
 names(files) <- file_types
 
 # read the text files into a data frame (source, text)
-n <- if_else(rep(use_small_data, 3), c(1000L, 1500L, 3000L), c(as.integer(899288*train_pct), as.integer(1010242*train_pct), as.integer(2360148*train_pct)))
-raw_text <- data_frame(file = dir(path, full.names = TRUE)) %>%
-  mutate(source = gsub('(.*\\.)(.*)(\\..*)', '\\2', basename(file))) %>%
-  unnest(text = map2(file, n, function(f, n) { read_lines(f, n_max = n, progress = interactive()) })) %>%
+pattern <- ifelse(use_small_data, 'small', format(use_pct_data, decimal.mark = '_'))
+raw_text <- data_frame(file = dir(path, pattern = paste0('*train\\.', pattern, '*'), full.names = TRUE)) %>%
+  mutate(source = gsub('^(.+)\\.(.+)\\.(.+)\\.txt', '\\1', basename(file))) %>%
+  mutate(text = map(file, function(f) { read_lines(f, progress = interactive()) })) %>%
+  unnest(text) %>%
   select(source, text)
 ```
 
@@ -60,7 +65,10 @@ tidy_unigram <-
 
 ```{r function_stats, echo = FALSE}
 # functions to return some stats on the files
-fsize <- function(x) as.integer(file.info(paste0(path, '/', files[x]))[1] / 1024 / 1024)
+fsize <- function(x) {
+  size <- file.info(paste0(path, '/', files[x]))[1] / 1024 / 1024
+  ifelse(size < 1, round(size, 2), as.integer(size))
+}
 nlines <- function(x) length(raw_text$text[raw_text$source == x])
 nwords <- function(x) nrow(tidy_unigram[tidy_unigram$source == x,])
 ```
@@ -193,7 +201,7 @@ plot_worldcloud_and_bar_chart <- function(df, title, worldcloud_max_words = 100)
       xlab(NULL) +
       coord_flip()
   
-  print(p, vp = vpStack(vps$figure,vps$plot))
+  print(p, vp = grid::vpStack(vps$figure,vps$plot))
 }
 ```
 
@@ -204,7 +212,8 @@ tidy_unigram %>%
   ungroup() %>%
   mutate(word = reorder(word, n)) %>%
   top_n(200, n) %>%
-  plot_worldcloud_and_bar_chart('Most used words in all documents (with stop-words)')
+  plot_worldcloud_and_bar_chart('Most used words in all documents (with stop-words)',
+                                worldcloud_max_words = 25)
 invisible(gc())
 ```
 
@@ -218,7 +227,8 @@ tidy_unigram %>%
   ungroup() %>%
   mutate(word = reorder(word, n)) %>%
   top_n(75, n) %>%
-  plot_worldcloud_and_bar_chart('Most used words in all documents (without stop-words)')
+  plot_worldcloud_and_bar_chart('Most used words in all documents (without stop-words)',
+                                worldcloud_max_words = 25)
 invisible(gc())
 ```
 
@@ -277,7 +287,8 @@ tidy_bigram %>%
   ungroup() %>%
   mutate(word = reorder(word, n)) %>%
   top_n(50, n) %>%
-  plot_worldcloud_and_bar_chart('Most used 2-grams in all documents')
+  plot_worldcloud_and_bar_chart('Most used 2-grams in all documents',
+                                worldcloud_max_words = 25)
 ```
 
 ```{r clean_bigram_mem, echo=FALSE, }
@@ -313,7 +324,8 @@ tidy_trigram %>%
   ungroup() %>%
   mutate(word = reorder(word, n)) %>%
   top_n(50, n) %>%
-  plot_worldcloud_and_bar_chart('Most used 3-grams in all documents')
+  plot_worldcloud_and_bar_chart('Most used 3-grams in all documents',
+                                worldcloud_max_words = 10)
 ```
 
 ```{r clean_trigram_mem, echo=FALSE, }
@@ -341,12 +353,13 @@ The package `textcat` can be used to detect the language of complete sentences i
 
 ```{r textcat, echo=FALSE, cache=TRUE, dependson='tidy_data'}
 library(textcat)
-lang <- textcat(clean_text$text[1:100])
+lang_tbl <- textcat(clean_text$text[1:100])
 ```
 
 ```{r display_textcat, echo=FALSE}
-knitr::kable(data_frame(lang = lang) %>% group_by(lang) %>% count(sort = TRUE))
-rm(lang)
+df <- data_frame(lang = lang_tbl) %>% group_by(lang) %>% count(sort = TRUE)
+knitr::kable(df)
+rm(lang_tbl, df)
 ```
 
 This process is computationally expensive: a simple empirical timing of `textcat` resulted in about 150/lines x second. Therefore processing the complete data-set would take about `r total_lines/150/60/60` hours.

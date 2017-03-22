@@ -72,17 +72,23 @@ create_small_datasets <- function(raw_text, file_type) {
 #' creates valid datasets to train, test and validate the model.
 #' 
 #' \code{create_datasets} creates the train, test and validate datasets.
-#'   each dataset is further divided into 1% chucks to ease development 
+#'   each dataset is further divided into chucks to ease development 
 #'   and overall processing.
 #'
 #' @param raw_text text read from the raw text files provided 
 #' @param file_type should be "blogs", "news" or "twitter"
+#' @param train_pct train dataset size (pct from total). defaut 80%.
+#' @param test_pct test dataset size (pct from total). defaut 10%.
+#' @param validate_pct validate dataset size (pct from total). defaut 10%.
+#' @param pct_inc percent for each chunk. default 1%.
 #' @return list containning one element by dataset type with the number of 
 #'   chunks created 
 #' @examples
-#'   \code{create_small_datasets(raw_text, "blogs")} will write 
-#'   \code{blogs.[train|test|validate].small.txt} to the 
-#'   PATH_DATA folder.
+#'   \code{create_datasets(raw_text, "blogs")} will write 
+#'   \code{all.[train|test|validate].txt} files to the 
+#'   PATH_DATA folder with 80%, 10% and 10% data fore train, test and
+#'   valudate, divided in 100 files (1% each). 80 files will be for 
+#'   train, 10 for test and 10 for validate.
 #'   
 create_datasets <- function(raw_text, file_type, 
                             train_pct = .8, test_pct = .1, validate_pct = .1, pct_inc = .01) {
@@ -92,12 +98,12 @@ create_datasets <- function(raw_text, file_type,
 
   chunks <- list()
   n <- length(raw_text)
-  s <- sample.int(n)       # random permutation of all text lines
+  s <- sample.int(n)                             # random permutation of all text lines
   
   m <- 1
   for (dataset in datasets) {
-    pct <- pct_datasets[[dataset]]        # % of (sampled) input file to read and write out
-    n_chunks <- pct / pct_inc             # number of cycles to create smaller files
+    pct <- pct_datasets[[dataset]]               # % of (sampled) input file to read and write out
+    n_chunks <- pct / pct_inc                    # number of cycles to create smaller files
     n_lines <- as.integer(n * pct / n_chunks)    # number of lines in each smaller file
     
     chunks[[dataset]] <- n_chunks
@@ -105,7 +111,6 @@ create_datasets <- function(raw_text, file_type,
     flog.info(paste0("  ", dataset, " [", n_chunks, " chunks]"))
     
     for (i in c(1:n_chunks)) {
-      #cat(".")
       out_file <- paste0(PATH_DATA, file_type, 
                          '.', dataset, 
                          '-', str_pad(i, 3, side = "left", "0"),
@@ -113,7 +118,6 @@ create_datasets <- function(raw_text, file_type,
       write_lines(raw_text[s][m:(m+n_lines-1)], out_file)
       m <- m + n_lines
     }
-    #cat("\n")
   }
   
   chunks
@@ -123,7 +127,7 @@ create_datasets <- function(raw_text, file_type,
 # main
 # ---------------------------------------------------------------------
 
-# initializde the logger and start logging...
+# initialize the logger and start logging...
 init_logger(threshold = DEBUG, filename = "make_datasets", timestamp = TRUE, tee = TRUE)
 flog.info("start: make_datasets")
 
@@ -140,7 +144,6 @@ for (file_type in file_types) {
   }
   
   # create pct datasets
-  #if (FALSE)
   chunks <- create_datasets(raw_text, 
                             file_type, 
                             train_pct = train_pct, 

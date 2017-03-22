@@ -41,13 +41,18 @@ create_pct_dataset <- function(raw_text, file_type, pct) {
   
   n <- length(raw_text)
   pct_lines <- as.integer(n * pct)
-  s <- sample(1:n, pct_lines * 2)  # need double for train (100%), test (50%) and validation (50%)
+  s <- sample(1:n, min(n, pct_lines * 2))  # need double for train (100%), test (50%) and validation (50%)
   
   m <- 1
   nlines <- pct_lines
-  for (dataset in c('train', 'test', 'validate')) {
+  if (pct <= .5) {
+    datasets <- c('train', 'test', 'validate')
+  } else {
+    datasets <- c('train')
+  }
+  for (dataset in datasets) {
     out_file <- paste0('data/', file_type, '.', dataset, '.', format(pct, decimal.mark = '_'), '.txt')
-    writeLines(raw_text[m:(m+nlines-1)], out_file)
+    writeLines(raw_text[s][m:(m+nlines-1)], out_file)
     
     m <- m + nlines
     nlines <- pct_lines / 2
@@ -69,7 +74,8 @@ for (file_type in file_types) {
   # create pct datasets
   # options c(.10, .15, .20, .25)
   #for (pct in c(.50)) create_pct_dataset(raw_text, file_type, pct)
-  for (pct in c(.06, .07, .08, .09)) create_pct_dataset(raw_text, file_type, pct)
+  #for (pct in c(.06, .07, .08, .09)) create_pct_dataset(raw_text, file_type, pct)
+  for (pct in c(.75, 1.00)) create_pct_dataset(raw_text, file_type, pct)
 }
 
 cat('\nend program')

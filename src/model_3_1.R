@@ -28,14 +28,14 @@ library(readtext)
 
 # controls training documents to use
 use_small_data <- TRUE     # TRUE will use a small sub-set of the data (for development)
-use_pct_data = .10           # percentage of each file to use as training
+use_pct_data = .01           # percentage of each file to use as training
 
 do_mem_size_calc <- FALSE  # this takes some time, so may not want always 
 do_accuracy_calc <- FALSE  # this takes some time, so may not want always 
 
 # discount factor for katz backoff model
-discount_factor <- 0.4
-use_unigram_model <- TRUE # TRUE will also use the unigram in the backoff
+discount_factor <- 0.5
+use_unigram_model <- FALSE # TRUE will also use the unigram in the backoff
 max_model_level <- 4       # start with this level for backoff
 
 # key for cache file (leave model 3 to reuse cache)

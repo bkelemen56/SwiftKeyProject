@@ -15,8 +15,7 @@
 # process each one and combine.
 # ---------------------------------------------------------------------
 
-source("~/R Workspace/data science class/10- capstone/SwiftKeyProject/R/globals_5_0.R")
-source("~/R Workspace/data science class/10- capstone/SwiftKeyProject/R/bad_words.R")
+source("R/bad_words.R")
 
 # ---------------------------------------------------------------------
 # load documents

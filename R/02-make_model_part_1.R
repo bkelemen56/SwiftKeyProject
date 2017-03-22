@@ -58,7 +58,7 @@ process_file <- function(i) {
 # main
 # ---------------------------------------------------------------------
 
-# initializde the logger and start logging...
+# initialize the logger and start logging...
 init_logger(threshold = DEBUG, filename = "make_model_part_1", timestamp = TRUE, tee = TRUE)
 flog.info("start: make_model_part_1")
 

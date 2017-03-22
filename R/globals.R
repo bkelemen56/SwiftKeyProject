@@ -57,9 +57,9 @@ init_logger <- function(threshold = NULL,
   if (!is.null(filename)) {
     ts <- if_else(timestamp, format(Sys.time(), "-%Y%m%d-%H%M%S"), "")
     if (tee) {
-      flog.appender(appender.tee(paste0(PATH_LOG, filename, ts)))
+      flog.appender(appender.tee(paste0(PATH_LOG, filename, ts, ".log")))
     } else {
-      flog.appender(appender.file(paste0(PATH_LOG, filename, ts)))
+      flog.appender(appender.file(paste0(PATH_LOG, filename, ts, ".log")))
     }
   }
 }

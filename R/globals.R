@@ -11,13 +11,7 @@ library(futile.logger)
 library(tidyverse)
 library(stringr)
 
-library(tokenizers)
-
-library(quanteda)
-library(readtext)
-
 library(data.table)
-library(FeatureHashing)
 
 # ---------------------------------------------------------------------
 # global variables
@@ -25,10 +19,16 @@ library(FeatureHashing)
 
 MODEL_ID <- "model-5-0"
 
-PATH_ROOT  <- '~/R Workspace/data science class/10- capstone/pnw/'
-PATH_CACHE <- paste0(PATH_ROOT, 'cache/')
-PATH_DATA  <- paste0(PATH_ROOT, 'data/')
-PATH_LOG   <- paste0(PATH_ROOT, 'logs/')
+DIR_CACHE     <- 'cache/'
+DIR_DATA      <- 'data/'
+DIR_LOG       <- 'logs/'
+DIR_RAW_DATA  <- 'raw-data/final/en_US/'
+
+PATH_ROOT     <- '~/R Workspace/data science class/10- capstone/pnw/'
+PATH_CACHE    <- paste0(PATH_ROOT, DIR_CACHE)
+PATH_DATA     <- paste0(PATH_ROOT, DIR_DATA)
+PATH_LOG      <- paste0(PATH_ROOT, DIR_LOG)
+PATH_RAW_DATA <- paste0(PATH_ROOT, DIR_RAW_DATA)
 
 # ---------------------------------------------------------------------
 # configure logging system

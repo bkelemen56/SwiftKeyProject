@@ -17,6 +17,13 @@
 
 source("R/bad_words.R")
 
+library(tokenizers)
+
+library(quanteda)
+library(readtext)
+
+library(FeatureHashing)
+
 # ---------------------------------------------------------------------
 # load documents
 # ---------------------------------------------------------------------

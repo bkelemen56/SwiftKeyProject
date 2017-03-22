@@ -25,7 +25,7 @@ library(FeatureHashing)
 
 MODEL_ID <- "model-5-0"
 
-PATH_ROOT  <- '~/R Workspace/data science class/10- capstone/SwiftKeyProject/'
+PATH_ROOT  <- '~/R Workspace/data science class/10- capstone/pnw/'
 PATH_CACHE <- paste0(PATH_ROOT, 'cache/')
 PATH_DATA  <- paste0(PATH_ROOT, 'data/')
 PATH_LOG   <- paste0(PATH_ROOT, 'logs/')
@@ -33,9 +33,6 @@ PATH_LOG   <- paste0(PATH_ROOT, 'logs/')
 # ---------------------------------------------------------------------
 # configure logging system
 # ---------------------------------------------------------------------
-
-# create our standard logger
-flog.logger("ROOT", threshold = INFO, appender = appender.console, layout = my_layout.simple.parallel, carp = NULL)
 
 # slightly modified version from
 # https://github.com/zatonovo/futile.logger/blob/master/R/layout.R
@@ -66,4 +63,8 @@ init_logger <- function(threshold = NULL,
     }
   }
 }
+
+# create our standard logger
+flog.logger("ROOT", threshold = INFO, appender = appender.console, layout = my_layout.simple.parallel, carp = NULL)
+
 

@@ -162,7 +162,7 @@ system2(
   stdout = TRUE
 )
 
-flog.debug("concatenating chunks into all.[train|test|validate]-???.txt files")
+flog.debug("concatenating chunks into all.[train|test|validate]-###.txt files")
 for (dataset in datasets) {
   flog.debug(paste0("  concatenating ", dataset, " files"))
   n_chunks <- chunks[[dataset]]

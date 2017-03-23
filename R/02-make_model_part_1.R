@@ -15,8 +15,8 @@ source('R/model_util.R')
 # ---------------------------------------------------------------------
 
 use_small_data <- FALSE
-debug          <- TRUE          # to only test loops, no file processing
-do_parallel    <- FALSE           # run in parallel (no console output) - only in production
+debug          <- FALSE          # to only test loops, no file processing
+do_parallel    <- TRUE           # run in parallel (no console output) - only in production
 n_prune        <- 5              # number of words to keep for same root
 
 # ---------------------------------------------------------------------

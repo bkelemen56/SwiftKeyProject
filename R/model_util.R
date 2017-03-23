@@ -15,8 +15,6 @@
 # process each one and combine.
 # ---------------------------------------------------------------------
 
-source("R/bad_words.R")
-
 library(tokenizers)
 
 library(quanteda)

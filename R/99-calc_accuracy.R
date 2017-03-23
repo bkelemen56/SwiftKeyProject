@@ -1,49 +1,124 @@
-debugSource('src/model_4_4_util.R')
+# ---------------------------------------------------------------------
+# model #5.0 - final model
+# make model - part 2
+#
+# script to process the training dataset and train 80 separate models,
+# each on 1% of the total data. these separate models will be combined
+# later via the make_model_part_2 script into the final model. 
+# ---------------------------------------------------------------------
 
-model_id    <- "model-4-4"
-model_fname <- paste0(model_id, ".001-a.cache")
+source('R/globals.R')
+source('R/model_util.R')
+
+library(doParallel)
+library(foreach)
+
+# ---------------------------------------------------------------------
+# parameters
+# ---------------------------------------------------------------------
+
+# model to validate
+model_fname <- paste0(MODEL_ID, ".001-a.cache")
+
+# parameters to predict word
+use_unigram <- TRUE
+discount_factor <- 0.5
 
 # use_small_data <- FALSE
 debug       <- TRUE           # to only test loops, no file processing
 do_parallel <- FALSE           # run in parallel (no console output) - only in production
 n_prune     <- 5              # number of words to keep for same root
 
-setDTthreads(7)                # for data.table parallel processing
+# ---------------------------------------------------------------------
+# functions
+# ---------------------------------------------------------------------
 
-# format_fixed_width <- function(i, width) {
-#   s <- paste(i)
-#   while (str_length(s) < width) s <- paste0("0", s)
-#   s
-# }
-
-calc_accuracy <- function(i, ...) {
-  fname <- paste0("data/all.test-", str_pad(i, 3, "left", "0"), ".txt")
-  cat(paste("calc accuracy on", fname, "\n"))
-  accuracy <- model_accuracy(model, fname, n_prune = n_prune, ...)
-  print(accuracy)
+#' calculates the accuracy of a model and a test file number.
+#' 
+#' \code{calc_accuracy} calculates the accuracy of a model and
+#'   predict_words algorithm on a test file indicated.
+#'
+#' @param model model to validate.
+#' @param i test file number to use for model accuracy.
+#' @param ... parameters passed to "model_accuracy(...)" call.
+#' @return list of accuracy results 
+#' @examples
+#'   \code{calc_accuracy(2, use_unigram = use_unigram)} will 
+#'   calcualte the accuracy the model on \code{data/all.test-002.txt}
+#'   file using unigrams in the katz backoff algorithm.
+#'   
+calc_accuracy <- function(model, i, ...) {
+  flog.trace("start:calc_accuracy")
+  
+  test_fname <- paste0("all.test-", str_pad(i, 3, "left", "0"), ".txt")
+  flog.info(paste("calculating accuracy on", test_fname))
+  accuracy <- model_accuracy(model, test_fname, ...)
+  log_accuracy(paste("accuracy on:", test_fname), accuracy)
+  
+  flog.trace("end:calc_accuracy")
   accuracy
 }
 
-# load model from cache
-model <- load_model_from_cache(model_fname)
-
-if (do_parallel) {
-  cat("computing in parallel... (no console output)")
-  library(doParallel)
+#' calculates the accuracy of a model saved in cache.
+#' 
+#' \code{calc_model_accuracy} calculates the accuracy of a model 
+#'   stored in the cache folder.
+#'
+#' @param model_fname model filename to validate.
+#' @param ... parameters passed to "model_accuracy(...)" call.
+#' @return list of accuracy results 
+#' @examples
+#'   \code{calc_model_accuracy(paste0(MODEL_ID, ".001-a.cache"), 
+#'   use_unigram = use_unigram)} will calcualte the accuracy the 
+#'   model on test files using unigrams in the katz backoff 
+#'   algorithm.
+#'   
+calc_model_accuracy <- function(model_fname, ...) {
+  flog.trace("start:calc_model_accuracy")
+  flog.info("calculating accuracy of a model")
   
-  no_cores <- detectCores() - 1  
-  cl <- makeCluster(no_cores, type = "FORK")  
-  registerDoParallel(cl) # ?no_cores)  
-
-  foreach(i = 1:80) %dopar% calc_accuracy(i)
-
-  stopCluster(cl)
+  # load model from cache
+  model <- load_model_from_cache(model_fname)
   
-} else if (debug) {
-  calc_accuracy(1, 
-                n_lines_to_process = 100,
-                use_unigram = TRUE)
+  if (debug) {
+    flog.info("start: debug computing")
+    accuracy <- calc_accuracy(model, 1, n_lines_to_process = 100, ...)
+    flog.info("end: debug computing")
+    
+  } else if (do_parallel) {
+    flog.info("start: parallel computing")
+
+    no_cores <- detectCores() - 1  
+    cl <- makeCluster(no_cores, type = "FORK")  
+    registerDoParallel(cl)
+    
+    flog.info(paste("computing with", no_cores, "cores"))
+    accuracy <- foreach(i = 1:10) %dopar% calc_accuracy(model, i, ...)
+    
+    stopCluster(cl)
+    flog.info("end: parallel computing")
+    
+  } else {
+    accuracy <- foreach(i = 1:10) %do% calc_accuracy(model, i, ...)
+  }
   
-} else {
-  for (i in c(1:80)) calc_accuracy(i)
+  log_accuracy("final accuracy:", reduce(accuracy, reduce_accuracy))
+  
+  flog.trace("end:calc_model_accuracy")
+  invisible()
 }
+
+# ---------------------------------------------------------------------
+# main
+# ---------------------------------------------------------------------
+
+# initialize the logger and start logging...
+init_logger(threshold = DEBUG, filename = "calc_accuracy", timestamp = TRUE, tee = TRUE)
+flog.info("start: calc_accuracy")
+
+# we could iterate here over various models...
+calc_model_accuracy(model_fname, 
+                    discount_factor = discount_factor, 
+                    use_unigram = use_unigram)
+
+flog.info("end: calc_accuracy")

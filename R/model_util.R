@@ -477,7 +477,7 @@ calc_model <- function(clean_documents,
 #'   evaluate the model
 #' @param discount_factor stupid katz backoff discount factor. 
 #'   defaults to 0.5
-#' @param use_unigram use unigrams in the model evalation? 
+#' @param use_unigram_model use unigrams in the model evalation? 
 #'   defaults to FALSE.
 #' @param max_model_level starting "n" in n-gram to start preducting
 #'   each word. default if 4 to start at 4-gram level.
@@ -492,7 +492,7 @@ calc_model <- function(clean_documents,
 #'   - n_incorrect_predictions number of incorrect predictions (word 
 #'       wasn't in top 5 predicted words)
 #'   - n_null_predictions number of NULL predictions (prediction
-#'       algorithm can't predict). this only happenes if \code{use_unigram}
+#'       algorithm can't predict). this only happenes if \code{use_unigram_model}
 #'       if FALSE and no other n-gram root is found
 #'   - accuracy accuracy of the model calculated as 
 #'       \code{(n_correct_predictions / n_words_to_predict)}
@@ -507,7 +507,7 @@ calc_model <- function(clean_documents,
 model_accuracy <- function(model, 
                            test_fname, 
                            discount_factor = 0.5, 
-                           use_unigram = FALSE, 
+                           use_unigram_model = FALSE, 
                            max_model_level = 4,
                            n_lines_to_process = -1) {
   
@@ -552,7 +552,7 @@ model_accuracy <- function(model,
         predicted_words <- predict_words(model, 
                                          text_to_predict, 
                                          discount_factor = discount_factor, 
-                                         use_unigram = use_unigram,
+                                         use_unigram_model = use_unigram_model,
                                          max_model_level = max_model_level)
         
         if (!is.null(predicted_words)) {
@@ -715,7 +715,7 @@ combine_models <- function(model1, model2, n_prune = 5) {
 #'   been cleaned.
 #' @param discount_factor stupid katz backoff discount factor. 
 #'   defaults to 0.5
-#' @param use_unigram use unigrams in the model evalation? 
+#' @param use_unigram_model use unigrams in the model evalation? 
 #'   defaults to FALSE.
 #' @param max_model_level starting "n" in n-gram to start preducting
 #'   each word. default if 4 to start at 4-gram level.
@@ -808,7 +808,9 @@ predict_words <- function(model,
 }
 
 pretty_fmt_prediction <- function(dt_words) {
-  if (nrow(dt_words) == 0) {
+  if (is.null(dt_words)) {
+    str <- "NULL"
+  } else if (nrow(dt_words) == 0) {
     str <- ""
   } else {
     str <- summarise(dt_words, word = paste(paste0(word, '(', round(prob, 5), '%)'), collapse = ', '))

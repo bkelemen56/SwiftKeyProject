@@ -650,7 +650,7 @@ combine_models <- function(model1, model2, n_prune = 5) {
   flog.info("  combining n-gram models")
   dt.n <- rbind(model.na, model.nb)
 
-  flog.debug('    re-calc count of n-grams\n')
+  flog.debug('    re-calc count of n-grams')
   dt.n.tmp <- unique(dt.n[, list(n = sum(n), n_gram, prob = 0), by = c("hash_root", "id_word")])    # ngram count
   setcolorder(dt.n.tmp, c("hash_root", "n", "n_gram", "id_word", "prob"))
   dt.n <- dt.n.tmp

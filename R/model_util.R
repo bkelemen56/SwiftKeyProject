@@ -575,7 +575,7 @@ model_accuracy <- function(model,
               n_null_predictions = n_null_predictions, 
               accuracy = (n_correct_predictions / n_words_to_predict))
          
-  log_accuracy("accuracy:", acc)        
+  #log_accuracy("accuracy:", acc)        
 
   flog.trace("end: model_accuracy")
   acc               
@@ -653,7 +653,7 @@ calc_model_accuracy <- function(model_fname, ...) {
   
   if (debug) {
     flog.info("start: debug computing")
-    accuracy <- calc_accuracy(model, 1, ...)
+    accuracy <- list(calc_accuracy(model, 1, ...))
     flog.info("end: debug computing")
     
   } else if (do_parallel) {
@@ -674,8 +674,8 @@ calc_model_accuracy <- function(model_fname, ...) {
     
   } else {
     # sequencial only use 1 chunk
-    accuracy <- foreach(i = 1:1) %do% 
-      calc_accuracy(model, i, ...)
+    flog.info("sequencial computing only uses 1 chunk")
+    accuracy <- list(calc_accuracy(model, 1, ...))
   }
   
   accuracy <- reduce(accuracy, reduce_accuracy)

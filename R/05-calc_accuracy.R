@@ -8,6 +8,7 @@
 # ---------------------------------------------------------------------
 
 source('R/globals.R')
+source('R/bad_words.R')
 source('R/model_util.R')
 
 library(doParallel)

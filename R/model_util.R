@@ -515,8 +515,9 @@ model_accuracy <- function(model,
   
   # load test file and clean
   clean_text <- load_documents(test_fname) %>% 
-    clean_documentds()
+    clean_documents()
   if (n_lines_to_process > 0) {
+    flog.debug(paste("only calculating accuracy over", n_lines_to_process, "lines"))
     clean_text <- clean_text[1:n_lines_to_process]
   }
   
@@ -528,8 +529,8 @@ model_accuracy <- function(model,
   
   flog.info(paste("predicting over", test_fname))
   for (clean_text_line in clean_text) {
-    if (n_line %% 100 == 0) { flog.info(paste("  processing line #", n_line)) }
-    if (n_line %% 10 == 0) { flog.debug(paste("             line #", n_line)) }
+    if (n_line %% 100 == 0) { flog.info(paste0("  processing lines ", (n_line+1), ":", (n_line+100))) }
+    #if (n_line %% 10 == 0) { flog.debug(paste0("             line # ", n_line)) }
     n_line <- n_line + 1
     
     #flog.debug(paste("New line:" , clean_text_line))
@@ -573,15 +574,32 @@ model_accuracy <- function(model,
               n_incorrect_predictions = n_incorrect_predictions,
               n_null_predictions = n_null_predictions, 
               accuracy = (n_correct_predictions / n_words_to_predict))
-                 
-  flog.info(paste("  n_words_to_predict =", acc$n_words_to_predict))
-  flog.info(paste("  n_correct_predictions =", acc$n_words_to_predict))
-  flog.info(paste("  n_incorrect_predictions =", acc$n_words_to_predict))
-  flog.info(paste("  n_null_predictions =", acc$n_words_to_predict))
-  flog.info(paste("  accuracy =", round(acc$n_words_to_predict), 4))
-  
+         
+  log_accuracy("accuracy:", acc)        
+
   flog.trace("end: model_accuracy")
   acc               
+}
+
+# helper function to log accuracy results
+log_accuracy <- function(msg, acc) {
+  flog.info(msg)        
+  flog.info(paste("  n_words_to_predict =", acc$n_words_to_predict))
+  flog.info(paste("  n_correct_predictions =", acc$n_correct_predictions))
+  flog.info(paste("  n_incorrect_predictions =", acc$n_incorrect_predictions))
+  flog.info(paste("  n_null_predictions =", acc$n_null_predictions))
+  flog.info(paste("  accuracy =", round(acc$accuracy, 4)))
+}
+
+# helper function to reduce two accuracy lists
+reduce_accuracy <- function(acc1, acc2) {
+  acc <- list(n_words_to_predict = acc1$n_words_to_predict + acc2$n_words_to_predict,
+              n_correct_predictions = acc1$n_correct_predictions + acc2$n_correct_predictions,
+              n_incorrect_predictions = acc1$n_incorrect_predictions + acc2$n_incorrect_predictions,
+              n_null_predictions = acc1$n_null_predictions + acc2$n_null_predictions, 
+              accuracy = (acc1$n_correct_predictions + acc2$n_correct_predictions) / 
+                (acc1$n_words_to_predict + acc2$n_words_to_predict))
+  acc
 }
 
 # ---------------------------------------------------------------------
@@ -707,7 +725,7 @@ combine_models <- function(model1, model2, n_prune = 5) {
 #' @examples
 #'   words <- predict_words(model, "this is my"
 #'   
-predict_words <- function(models, 
+predict_words <- function(model, 
                           s, 
                           discount_factor = 0.5, 
                           use_unigram_model = FALSE, 
@@ -719,7 +737,7 @@ predict_words <- function(models,
     if (level == 1) {
       if (use_unigram_model) {
         # need special case to avoid pocessing all the unigram model
-        dt_model <- models[[1]]
+        dt_model <- model[[1]]
         
         # filer out all words that would not help given their probability and have not been seen yet
         dt_words <- 
@@ -733,7 +751,7 @@ predict_words <- function(models,
       #cat(paste('prediction for = ', s, ' [level', level, ']\n'))
       
       # levels 2, 3, ...
-      dt_model <- models[[2]]
+      dt_model <- model[[2]]
       
       # get all predictions at this level
       hash_s <- hashed.value(s)
@@ -768,7 +786,7 @@ predict_words <- function(models,
   }
   
   flog.trace("start: predict_words")
-  flog.debug(paste0("predicting next word for '", s, "'"))
+  flog.trace(paste0("predicting next word for '", s, "'"))
   
   # do predictions starting with max level n-grams
   dt_words <- predict_words_recursive(max_model_level, 
@@ -783,7 +801,7 @@ predict_words <- function(models,
     setkey(dt_words, word)
   }
   
-  flog.debug(paste0("  predicted words are ", paste(dt_words, collapse = ", ")))
+  flog.trace(paste0("  predicted words are ", paste(dt_words, collapse = ", ")))
   
   flog.trace("end: predict_words")
   dt_words[order(-prob)]

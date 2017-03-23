@@ -602,6 +602,89 @@ reduce_accuracy <- function(acc1, acc2) {
   acc
 }
 
+#' calculates the accuracy of a model saved in cache.
+#' 
+#' \code{calc_model_accuracy} calculates the accuracy of a model 
+#'   stored in the cache folder.
+#'
+#' @param model_fname model filename to validate.
+#' @param ... parameters passed to "calc_accuracy(...)" call.
+#' @return list of accuracy results 
+#' @examples
+#'   \code{calc_model_accuracy(paste0(MODEL_ID, ".001-a.cache"), 
+#'   use_unigram_model = use_unigram_model)} will calcualte the accuracy the 
+#'   model on test files using unigrams in the katz backoff 
+#'   algorithm.
+#'   
+calc_model_accuracy <- function(model_fname, ...) {
+  
+  #' calculates the accuracy of a model and a test file number.
+  #' 
+  #' \code{calc_accuracy} calculates the accuracy of a model and
+  #'   predict_words algorithm on a test file indicated.
+  #'
+  #' @param model model to validate.
+  #' @param i test file number to use for model accuracy.
+  #' @param ... parameters passed to "model_accuracy(...)" call.
+  #' @return list of accuracy results 
+  #' @examples
+  #'   \code{calc_accuracy(2, use_unigram_model = use_unigram_model)} will 
+  #'   calcualte the accuracy the model on \code{data/all.test-002.txt}
+  #'   file using unigrams in the katz backoff algorithm.
+  #'   
+  calc_accuracy <- function(model, i, ...) {
+    flog.trace("start:calc_accuracy")
+    
+    test_fname <- paste0("all.test-", str_pad(i, 3, "left", "0"), ".txt")
+    flog.info(paste("calculating accuracy on", test_fname))
+    accuracy <- model_accuracy(model, test_fname, ...)
+    log_accuracy(paste("accuracy on:", test_fname), accuracy)
+    
+    flog.trace("end:calc_accuracy")
+    accuracy
+  }
+  
+  flog.trace("start:calc_model_accuracy")
+  flog.info("calculating accuracy of a model")
+  
+  # load model from cache
+  flog.info(paste("using model", model_fname))
+  model <- load_model_from_cache(model_fname)
+  
+  if (debug) {
+    flog.info("start: debug computing")
+    accuracy <- calc_accuracy(model, 1, ...)
+    flog.info("end: debug computing")
+    
+  } else if (do_parallel) {
+    flog.info("start: parallel computing")
+    
+    no_cores <- detectCores() - 1  
+    cl <- makeCluster(no_cores, type = "FORK")  
+    registerDoParallel(cl)
+    
+    flog.info(paste("computing with", no_cores, "cores"))
+    # in parallel only compute max non_cores chunks 
+    # (it takes too long otherwise)
+    accuracy <- foreach(i = 1:(min(no_cores, 10))) %dopar% 
+      calc_accuracy(model, i, ...)
+    
+    stopCluster(cl)
+    flog.info("end: parallel computing")
+    
+  } else {
+    # sequencial only use 1 chunk
+    accuracy <- foreach(i = 1:1) %do% 
+      calc_accuracy(model, i, ...)
+  }
+  
+  accuracy <- reduce(accuracy, reduce_accuracy)
+  log_accuracy("final accuracy:", accuracy)
+  
+  flog.trace("end:calc_model_accuracy")
+  accuracy
+}
+
 # ---------------------------------------------------------------------
 # combine models
 # ---------------------------------------------------------------------

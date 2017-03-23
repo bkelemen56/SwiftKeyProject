@@ -20,8 +20,13 @@ library(foreach)
 # model to validate
 model_fname <- paste0(MODEL_ID, ".001-a.cache")
 
+# how many lines to read from test file(s) to calculate accuracy?
+# after processing most of the test files, i noticed that with only
+# 200 lines we get the same accuracy estimate
+n_lines_to_process <- 200
+
 # parameters to predict word
-use_unigram <- TRUE
+use_unigram_model <- TRUE
 discount_factor <- 0.5
 
 # use_small_data <- FALSE
@@ -43,7 +48,7 @@ n_prune     <- 5              # number of words to keep for same root
 #' @param ... parameters passed to "model_accuracy(...)" call.
 #' @return list of accuracy results 
 #' @examples
-#'   \code{calc_accuracy(2, use_unigram = use_unigram)} will 
+#'   \code{calc_accuracy(2, use_unigram_model = use_unigram_model)} will 
 #'   calcualte the accuracy the model on \code{data/all.test-002.txt}
 #'   file using unigrams in the katz backoff algorithm.
 #'   
@@ -69,7 +74,7 @@ calc_accuracy <- function(model, i, ...) {
 #' @return list of accuracy results 
 #' @examples
 #'   \code{calc_model_accuracy(paste0(MODEL_ID, ".001-a.cache"), 
-#'   use_unigram = use_unigram)} will calcualte the accuracy the 
+#'   use_unigram_model = use_unigram_model)} will calcualte the accuracy the 
 #'   model on test files using unigrams in the katz backoff 
 #'   algorithm.
 #'   
@@ -78,6 +83,7 @@ calc_model_accuracy <- function(model_fname, ...) {
   flog.info("calculating accuracy of a model")
   
   # load model from cache
+  flog.info(paste("using model", model_fname))
   model <- load_model_from_cache(model_fname)
   
   if (debug) {
@@ -93,13 +99,18 @@ calc_model_accuracy <- function(model_fname, ...) {
     registerDoParallel(cl)
     
     flog.info(paste("computing with", no_cores, "cores"))
-    accuracy <- foreach(i = 1:10) %dopar% calc_accuracy(model, i, ...)
+    # in parallel only compute max non_cores chunks 
+    # (it takes too long otherwise)
+    accuracy <- foreach(i = 1:(max(no_cores, 10))) %dopar% 
+      calc_accuracy(model, i, n_lines_to_process = n_lines_to_process, ...)
     
     stopCluster(cl)
     flog.info("end: parallel computing")
     
   } else {
-    accuracy <- foreach(i = 1:10) %do% calc_accuracy(model, i, ...)
+    # sequencial only use 1 chunk
+    accuracy <- foreach(i = 1:1) %do% 
+      calc_accuracy(model, i, n_lines_to_process = n_lines_to_process, ..)
   }
   
   log_accuracy("final accuracy:", reduce(accuracy, reduce_accuracy))
@@ -119,6 +130,6 @@ flog.info("start: calc_accuracy")
 # we could iterate here over various models...
 calc_model_accuracy(model_fname, 
                     discount_factor = discount_factor, 
-                    use_unigram = use_unigram)
+                    use_unigram_model = use_unigram_model)
 
 flog.info("end: calc_accuracy")

@@ -185,7 +185,7 @@ server <- function(input, output, session) {
   
   output$wordplot <- renderPlot({
     dt_predic <- do_prediction()
-    if ("data.frame" %in% class(dt_predic)) {
+    if ("data.frame" %in% class(dt_predic) && nrow(dt_predic)) {
       wordcloud_rep(dt_predic$word, dt_predic$prob * 1000, 
                   random.order = FALSE, 
                   colors = brewer.pal(8, "Dark2"),

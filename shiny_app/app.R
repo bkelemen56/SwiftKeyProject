@@ -26,7 +26,7 @@ model_fname <- paste0(MODEL_ID, ".001-c.cache")
 # ---------------------------------------------------------------------
 
 # initialize the logger and start logging...
-init_logger(threshold = DEBUG, filename = "shiny-app", timestamp = TRUE, tee = FALSE)
+#init_logger(threshold = DEBUG, filename = "shiny-app", timestamp = TRUE, tee = FALSE)
 flog.info("start: shiny_app")
 
 # load pre-calculated model as this is an expensive operation
@@ -44,7 +44,7 @@ ui <- fluidPage(
   # Sidebar with a slider input for number of bins 
   sidebarLayout(
     sidebarPanel(
-      textAreaInput("text", "Text to process", "Enter more text here", width = "300px", height = "300px"),
+      textAreaInput("text", "Text to process", "how do you ", width = "300px", height = "300px"),
       sliderInput("discount_factor", "Backoff discount factor:", min = 0, max = 1, value = .5),
       checkboxInput("use_unigram", "Use unigram in backoff:", TRUE)
     ),
@@ -98,7 +98,7 @@ server <- function(input, output, session) {
     dt_predic <- do_prediction()
     
     # cat(paste('dt_predic typeof = ', typeof(dt_predic)))
-    if (!is.null(dt_predic)) print(dt_predic)
+    #if (!is.null(dt_predic)) print(dt_predic)
     
     if ("data.frame" %in% class(dt_predic)) {
       pretty_fmt_prediction(dt_predic)

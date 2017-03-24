@@ -65,6 +65,6 @@ init_logger <- function(threshold = NULL,
 }
 
 # create our standard logger
-flog.logger("ROOT", threshold = INFO, appender = appender.console, layout = my_layout.simple.parallel, carp = NULL)
-
+flog.threshold(INFO)
+flog.appender(appender.console())
 

@@ -894,7 +894,7 @@ pretty_fmt_prediction <- function(dt_words) {
   } else if (nrow(dt_words) == 0) {
     str <- ""
   } else {
-    str <- summarise(dt_words, word = paste(paste0(word, '(', round(prob, 5), '%)'), collapse = ', '))
+    str <- summarise(dt_words, word = paste(paste0(word, '(', round(prob*100, 2), '%)'), collapse = ', '))
     str <- str_replace(str, ', $', '')
   }
   str

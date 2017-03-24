@@ -15,6 +15,8 @@ source('R/model_util.R')
 library(shiny)
 library(shinydashboard)
 
+library(wordcloud)
+
 # ---------------------------------------------------------------------
 # parameters
 # ---------------------------------------------------------------------
@@ -74,19 +76,24 @@ body <- dashboardBody(
     tabItem(tabName = "predict_word",
             fluidRow(
               sidebarPanel(
-                textAreaInput("text", "Text to process", "how do you ", width = "250px", height = "300px"),
+                textAreaInput("text", 
+                              "As you type here, the predictions will appear to the right, from where you can select the next word.", 
+                              "", width = "250px", height = "300px"),
                 sliderInput("discount_factor", "Backoff discount factor:", min = 0, max = 1, value = .5),
                 checkboxInput("use_unigram", "Use unigram in backoff:", TRUE)
               ),
               
-              # Show a plot of the generated distribution
               mainPanel(
+                h3("Predicted words (click to select word):"),
+                br(),
                 textOutput("prediction"),
                 uiOutput("word1"),
                 uiOutput("word2"),
                 uiOutput("word3"),
                 uiOutput("word4"),
-                uiOutput("word5")
+                uiOutput("word5"),
+                br(),
+                plotOutput("wordplot", width = "200px", height = "200px")
               )
             )
     ),
@@ -110,29 +117,36 @@ server <- function(input, output, session) {
   do_prediction <- eventReactive(input$text, {
     s <- input$text
     
+    # special case of empty text
+    if (s == "") s <- " "
+    
     # only predict when a space is pressent at the end.
-    # could also predice if the last word is known (in model[[1]])
-    space <- if_else((s != ""), (str_sub(s, str_length(s)) == " "), FALSE)
-    if (!space) return(NULL)
-      
-    clean_sentences <- clean_documents(list(s))
-    clean_text_split <- str_split(clean_sentences[length(clean_sentences)], " ")[[1]]
+    if (!endsWith(s, " ")) return(NULL)
+
+    if (endsWith(trimws(s), ".")) {
+      # start of new sentence
+      clean_text_split <- ""
+    } else {
+      clean_sentences <- clean_documents(list(s), strip_punctuation = TRUE)
+      clean_text_split <- str_split(clean_sentences[length(clean_sentences)], " ")[[1]]
+    }
     
     m <- length(clean_text_split)
     
-    if (m < 3) return("Enter 3 or more words to start prediction algorithm")
+    max_model_level <- min(m + 1, 4)
+    if (m < 3) {
+      text_to_predict <- paste(clean_text_split, collapse = " ")
+    } else {
+      text_to_predict <- paste(clean_text_split[(m - 2):m], collapse = " ")
+    }
     
-    text_to_predict <- paste(clean_text_split[m - 2], clean_text_split[m - 1], clean_text_split[m])
-    
-    # print(text_to_predict)
-    # print(typeof(text_to_predict))
-    # print(class(text_to_predict))
+    #cat("text to predict: '", text_to_predict, "'\n")
     
     predicted_words <- predict_words(model, 
                                      text_to_predict, 
                                      discount_factor = input$discount_factor, 
                                      use_unigram = input$use_unigram,
-                                     max_model_level = 4)
+                                     max_model_level = max_model_level)
     if (!is.null(predicted_words)) return(predicted_words)
     
     return("can't predict - no match")
@@ -155,8 +169,7 @@ server <- function(input, output, session) {
     dt_predic <- do_prediction()
     
     if ("data.frame" %in% class(dt_predic) && i <= nrow(dt_predic)) {
-      # TODO: add later fluidRow....and top 5 words
-      actionButton(paste0("word", i), dt_predic[i]$word)
+      actionButton(paste0("word", i), dt_predic[i]$word, width = "100px")
     }
   }
   
@@ -166,7 +179,22 @@ server <- function(input, output, session) {
   output$word4 <- renderUI({ add_button(4) })
   output$word5 <- renderUI({ add_button(5) })
   
-  # process add buttons for preducted words
+  # code from: http://shiny.rstudio.com/gallery/word-cloud.html
+  # Make the wordcloud drawing predictable during a session
+  wordcloud_rep <- repeatable(wordcloud)
+  
+  output$wordplot <- renderPlot({
+    dt_predic <- do_prediction()
+    if ("data.frame" %in% class(dt_predic)) {
+      wordcloud_rep(dt_predic$word, dt_predic$prob * 1000, 
+                  random.order = FALSE, 
+                  colors = brewer.pal(8, "Dark2"),
+                  scale = c(4,0.5),
+                  rot.per = 0)
+    }
+  })
+  
+  # process add buttons for predicted words
   
   update_text <- function(i) {
     dt_predic <- do_prediction()
@@ -183,6 +211,8 @@ server <- function(input, output, session) {
 # ---------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------
+
+set.seed(1234)
 
 # initialize the logger and start logging...
 flog.info("start: shiny_app")

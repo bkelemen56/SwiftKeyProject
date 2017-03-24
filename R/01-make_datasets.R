@@ -152,7 +152,7 @@ for (file_type in file_types) {
                             pct_inc = pct_inc)
 }
 
-# concat all sub-files for each chunch into an "all.<dataset>-nnn.txt" file
+# concat all sub-files for each chunk into an "all.<dataset>-nnn.txt" file
 flog.info("creating all.[train|test|validate]-###.txt files")
 
 flog.debug("deleting previous all.*-*.txt files")

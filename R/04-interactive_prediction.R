@@ -2,8 +2,8 @@
 # model #5.0 - final model
 # interactive prediction of next word on console
 #
-# the interactive process reads a sentince and predicts each word.
-# a list of words predicted are displayed.
+# this interactive process reads a sentence and predicts each word.
+# the list of words predicted are displayed.
 # ---------------------------------------------------------------------
 
 source('R/globals.R')

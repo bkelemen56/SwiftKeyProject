@@ -2,9 +2,9 @@
 # model #5.0 - final model
 # make model - part 2
 #
-# script to process the training dataset and train 80 separate models,
-# each on 1% of the total data. these separate models will be combined
-# later via the make_model_part_2 script into the final model. 
+# script to process the 80 separate models created in part 1. the
+# separate models are combined iteratively into the larger and larger
+# models until the final one is calculated.
 # ---------------------------------------------------------------------
 
 source('R/globals.R')

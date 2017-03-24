@@ -687,7 +687,7 @@ calc_model_accuracy <- function(model_fname, ...) {
 # combine models
 # ---------------------------------------------------------------------
 
-#' calculates the model accuracy.
+#' combines two models together.
 #' 
 #' \code{combine_models} combines two models together. this function is 
 #'   used to incrementally build a larger model by building smaller 
@@ -785,7 +785,7 @@ combine_models <- function(model1, model2, n_prune = 5) {
 # prediction function
 # ---------------------------------------------------------------------
 
-#' preduct next word
+#' predict next word
 #' 
 #' \code{predict_words} combines two models together. this function is 
 #'   used to incrementally build a larger model by building smaller 

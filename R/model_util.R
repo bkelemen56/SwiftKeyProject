@@ -151,13 +151,13 @@ clean_text <- function(text, to_lower = FALSE, tokenize_string = FALSE) {
 #'   doc <- load_documents("data/all.train-001.txt")
 #'   clean_documents(doc)
 #'   
-clean_documents <- function(documents) {
+clean_documents <- function(documents, strip_punctuation = FALSE) {
   flog.trace("start: clean_documents")
   flog.debug("cleaning documents")
 
   clean_documents <- (documents[[1]]) %>%
     paste(collapse = "\n") %>%
-    tokenize_sentences(lowercase = TRUE, strip_punctuation = FALSE, simplify = TRUE) %>%
+    tokenize_sentences(lowercase = TRUE, strip_punctuation = strip_punctuation, simplify = TRUE) %>%
     clean_text()
   
   flog.trace("end: clean_documents")

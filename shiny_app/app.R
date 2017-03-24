@@ -13,6 +13,7 @@ source('R/bad_words.R')
 source('R/model_util.R')
 
 library(shiny)
+library(shinydashboard)
 
 # ---------------------------------------------------------------------
 # parameters
@@ -22,44 +23,87 @@ library(shiny)
 model_fname <- paste0(MODEL_ID, ".001-c.cache")
 
 # ---------------------------------------------------------------------
-# initialization
+# shiny UI
 # ---------------------------------------------------------------------
 
-# initialize the logger and start logging...
-#init_logger(threshold = DEBUG, filename = "shiny-app", timestamp = TRUE, tee = FALSE)
-flog.info("start: shiny_app")
+# ui <- fluidPage(
+#   # Application title
+#   titlePanel(paste0("Word prediction app [", MODEL_ID, "]")),
+#   
+#   # Sidebar with a slider input for number of bins 
+#   sidebarLayout(
+#     sidebarPanel(
+#       textAreaInput("text", "Text to process", "how do you ", width = "300px", height = "300px"),
+#       sliderInput("discount_factor", "Backoff discount factor:", min = 0, max = 1, value = .5),
+#       checkboxInput("use_unigram", "Use unigram in backoff:", TRUE)
+#     ),
+#   
+#     # Show a plot of the generated distribution
+#     mainPanel(
+#       textOutput("prediction"),
+#       uiOutput("word1"),
+#       uiOutput("word2"),
+#       uiOutput("word3"),
+#       uiOutput("word4"),
+#       uiOutput("word5")
+#     )
+#   )
+# )
 
-# load pre-calculated model as this is an expensive operation
-model <- load_model_from_cache(model_fname)
-flog.info(paste("using model ", model_fname))
+header <- dashboardHeader(title = "Predict next word")
 
-# ---------------------------------------------------------------------
-# shiny functions
-# ---------------------------------------------------------------------
+## Sidebar content
+sidebar <- dashboardSidebar(
+  sidebarMenu(
+    menuItem("Welcome!", tabName = "start", icon = icon("star")),
+    menuItem("Predict words", tabName = "predict_word", icon = icon("dashboard")),
+    menuItem("Need help?", tabName = "help_doc", icon = icon("th")),
+    
+    menuItem("Source code", icon = icon("file-code-o"), 
+             href = "https://github.com/bkelemen56/SwiftKeyProject")
+  )
+)
 
-ui <- fluidPage(
-  # Application title
-  titlePanel(paste0("Word prediction app [", MODEL_ID, "]")),
-  
-  # Sidebar with a slider input for number of bins 
-  sidebarLayout(
-    sidebarPanel(
-      textAreaInput("text", "Text to process", "how do you ", width = "300px", height = "300px"),
-      sliderInput("discount_factor", "Backoff discount factor:", min = 0, max = 1, value = .5),
-      checkboxInput("use_unigram", "Use unigram in backoff:", TRUE)
+## Body content
+body <- dashboardBody(
+  tabItems(
+    tabItem(tabName = "start",
+            h2("Insert welcome doc here...")
     ),
-  
-    # Show a plot of the generated distribution
-    mainPanel(
-      textOutput("prediction"),
-      uiOutput("word1"),
-      uiOutput("word2"),
-      uiOutput("word3"),
-      uiOutput("word4"),
-      uiOutput("word5")
+    
+    tabItem(tabName = "predict_word",
+            fluidRow(
+              sidebarPanel(
+                textAreaInput("text", "Text to process", "how do you ", width = "250px", height = "300px"),
+                sliderInput("discount_factor", "Backoff discount factor:", min = 0, max = 1, value = .5),
+                checkboxInput("use_unigram", "Use unigram in backoff:", TRUE)
+              ),
+              
+              # Show a plot of the generated distribution
+              mainPanel(
+                textOutput("prediction"),
+                uiOutput("word1"),
+                uiOutput("word2"),
+                uiOutput("word3"),
+                uiOutput("word4"),
+                uiOutput("word5")
+              )
+            )
+    ),
+    
+    tabItem(tabName = "help_doc",
+            h2("Insert documentation here")
     )
   )
 )
+
+# create the whole UI
+ui <- dashboardPage(header, sidebar, body)
+
+
+# ---------------------------------------------------------------------
+# shiny server
+# ---------------------------------------------------------------------
 
 server <- function(input, output, session) {
   
@@ -136,4 +180,16 @@ server <- function(input, output, session) {
   observeEvent(input$word5, { update_text(5) })
 }
 
+# ---------------------------------------------------------------------
+# main
+# ---------------------------------------------------------------------
+
+# initialize the logger and start logging...
+flog.info("start: shiny_app")
+
+# load pre-calculated model as this is an expensive operation
+model <- load_model_from_cache(model_fname)
+flog.info(paste("using model ", model_fname))
+
+# run shiny app
 shinyApp(ui, server)

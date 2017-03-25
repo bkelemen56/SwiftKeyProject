@@ -26,6 +26,7 @@ bad_words = c(
   "b00bs",
   "b17ch",
   "b1tch",
+  "bitch",
   "ballbag",
   "balls",
   "ballsack",

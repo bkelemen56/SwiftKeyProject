@@ -1,0 +1,21 @@
+### User Interface
+
+The user interface presents a textbox where can enter text to predict the next word. As soon as you type a space, the top five predictions are presented. If the prediction was correct, you can select the next word directly by clicking on it.
+
+A wordcloud chart is also displayed with the words predicted.  
+
+Two technical options (fully described in the “Algorithm” section below) are provided for those willing to experiment:
+- discount_factor: 
+- Use unigrams in backoff?
+
+### Algorithm
+
+**yawpr** is a machine learning algorithm based on a modified version from the [N-gram Language Models and <i>Stupid Backoff</i>] (http://www.aclweb.org/anthology/D07-1090.pdf) paper. The model is trained on 1, 2, 3 and 4-gram's, where each n-gram (w[n] w[n-1] ... w[2] w[1], w[i] = word) is divided into the <i>root</i> (w[n] w[n-1] ... w[2]) and the last <i>word</i> (w[1]). Sample probabilities are then computed for all n-grams: p(<i>word</i>|<i>root</i>) = count(<i>word</i>|<i>root</i>) / count(<i>word</i>).
+
+The model is trained on 80% from a corpus of 4 million lines and 100 million words, while the remaining 20% is reserved for testing and validation datasets (10% each). 
+
+The training dataset is cleaned (removing obscene words, special characters, URLs, twitter handles and punctuation) but other stop words are not removed (so they can be predicted). This training dataset is then processed by computing frequencies and sample probabilities as explained above.
+
+To predict the next word, a search is initiated at the highest n-gram model depending on the <i>root</i> already seen. The highest probability <i>words</i> following the <i>root</i> matching the n-1 words already seen are selected. In doing so, a new probability is calculated by discounting the word count by a <i>discount_factor</i> (parameter to the algorithm). The algorithm recursively moves to the lower order n-gram (by removing the fist word from the <i>root</i>) and repeating the search. Unigrams are optionally used as the last search level. A smoothing parameter <i>alpha</i> is applied for lower level probabilities. <i>alpha</i> is calculated as the remaining probability left over after recalculating the new probabilities. As we descend the n-gram levels, the search is optimized by only selecting words that could improve the prediction and have not been predicted yet.
+
+Finally, optimization in memory utilization and speed are implemented by using the `data.table` `R` package (with indices), encoding words as integers and hashing n-grams roots.

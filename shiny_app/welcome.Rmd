@@ -1,0 +1,19 @@
+## Welcome to yawmr!
+
+**yawpr** (yet another word predictor for R) is the ultimate prediction algorithm implemented in the `R` language. 
+
+It was developed to allow fast real-time word predictions within a simple web based user interface.
+
+Key features of the program:
+- N-gram Language Model trained from 1, 2, 3 and 4-grams 
+- Incremental model training for large corpus
+- Fast prediction of the next word
+- Simple user interface
+
+Select from menu options on the left.  
+
+**Predict words** takes you to the predict words section, from where you’ll be able to type sentences/words, and when you type a space, yawpr will predict the next words. The predicted words are clickable so you can continue to type/predict.
+
+Additional help is available under **Need help?** section.
+
+Enjoy!

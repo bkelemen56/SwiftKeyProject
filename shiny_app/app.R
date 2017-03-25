@@ -28,13 +28,14 @@ model_fname <- paste0(MODEL_ID, ".001-c.cache")
 # shiny UI
 # ---------------------------------------------------------------------
 
-header <- dashboardHeader(title = "Predict next word")
+header <- dashboardHeader(title = "yawmr")
 
 ## Sidebar content
 sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("Welcome!", tabName = "start", icon = icon("star")),
-    menuItem("Predict words", tabName = "predict_word", icon = icon("dashboard")),
+    menuItem("Predict words", tabName = "predict_word", icon = icon("dashboard"), 
+             badgeLabel = "try me!", badgeColor = "green"),
     menuItem("Need help?", tabName = "help_doc", icon = icon("th")),
     
     menuItem("Source code", icon = icon("file-code-o"), 
@@ -46,7 +47,7 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(
   tabItems(
     tabItem(tabName = "start",
-            h2("Insert welcome doc here...")
+            includeMarkdown("welcome.rmd")
     ),
     
     tabItem(tabName = "predict_word",
@@ -75,7 +76,7 @@ body <- dashboardBody(
     ),
     
     tabItem(tabName = "help_doc",
-            h2("Insert documentation here")
+            includeMarkdown("help.rmd")
     )
   )
 )

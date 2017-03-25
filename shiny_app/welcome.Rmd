@@ -10,10 +10,14 @@ Key features of the program:
 - Fast prediction of the next word
 - Simple user interface
 
-Select from menu options on the left.  
+Use options from the left to explore the application.
 
-**Predict words** takes you to the predict words section, from where you’ll be able to type sentences/words, and when you type a space, yawpr will predict the next words. The predicted words are clickable so you can continue to type/predict.
+**Welcome!** displays this page.  
+
+**Predict words** takes you to the predict words section, from where you’ll be able to type sentences/words, and when you type a space, yawpr will predict the next word and up to 4 additional options. The predicted words are clickable so you can continue to type/predict.
 
 Additional help is available under **Need help?** section.
+
+**Source code** takes you to my github repo for this project.
 
 Enjoy!

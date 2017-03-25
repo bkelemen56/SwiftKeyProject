@@ -18,7 +18,7 @@ user to type words and observe the predictions.
 Key features of the algorithm:
 - N-gram Language Model trained from 1, 2, 3 and 4-grams 
 - Incremental model training for large corpus
-- Fast prediction of the next word
+- Fast prediction of the next word (and up to four more)
 
 As we continue to develop the algorithm, we're seeking early investors in the company to fund more advanced prediction algorithms. Please contact [me directly](mailto:bill@kelemen-usa.com?Subject=Interested%20in%20yawpr) for more information.
 </small>
@@ -42,7 +42,7 @@ how well does it predict?
 ========================================================
 
 <small>
-<b>yawpr</b> has an accuracy prediction between 22-28% when tested against a randomly selected dataset not used during training.
+<b>yawpr</b> has an accuracy prediction between 22-28% when tested against a randomly selected dataset not used during training. An acccurate prediction is defined as "one of the top five word predicted matches the the actual next word". 
 
 Multiple models were created with varying sized datasets from the overall training dataset. These models were then validated against a section of the test dataset (due to computing restrictions). The following table displays the accuracies obtained on each:
 
@@ -50,7 +50,7 @@ Multiple models were created with varying sized datasets from the overall traini
 ----------------------|---------------|-----------|--------|-------------------------
 model-5-0.001-a.cache | 2%            | 0.2211256 | 74 Mb  |
 model-5-0.001-b.cache | 4%            | 0.2325776 | 133 Mb |
-model-5-0.001-c.cache | 8%            | 0.2428192 | 240 Mb | used in the shiny app
+model-5-0.001-c.cache | 8%            | 0.2428192 | 240 Mb | model used in the shiny app
 model-5-0.001-d.cache | 16%           | 0.2555747 | 434 Mb |
 model-5-0.001-e.cache | 32%           | 0.2699595 | 777 Mb |
 model-5-0.001-f.cache | 64%           | 0.2825287 | 1.4 Gb |

@@ -28,30 +28,6 @@ model_fname <- paste0(MODEL_ID, ".001-c.cache")
 # shiny UI
 # ---------------------------------------------------------------------
 
-# ui <- fluidPage(
-#   # Application title
-#   titlePanel(paste0("Word prediction app [", MODEL_ID, "]")),
-#   
-#   # Sidebar with a slider input for number of bins 
-#   sidebarLayout(
-#     sidebarPanel(
-#       textAreaInput("text", "Text to process", "how do you ", width = "300px", height = "300px"),
-#       sliderInput("discount_factor", "Backoff discount factor:", min = 0, max = 1, value = .5),
-#       checkboxInput("use_unigram", "Use unigram in backoff:", TRUE)
-#     ),
-#   
-#     # Show a plot of the generated distribution
-#     mainPanel(
-#       textOutput("prediction"),
-#       uiOutput("word1"),
-#       uiOutput("word2"),
-#       uiOutput("word3"),
-#       uiOutput("word4"),
-#       uiOutput("word5")
-#     )
-#   )
-# )
-
 header <- dashboardHeader(title = "Predict next word")
 
 ## Sidebar content
@@ -80,7 +56,7 @@ body <- dashboardBody(
                               "As you type here, the predictions will appear to the right, from where you can select the next word.", 
                               "", width = "250px", height = "300px"),
                 sliderInput("discount_factor", "Backoff discount factor:", min = 0, max = 1, value = .5),
-                checkboxInput("use_unigram", "Use unigram in backoff:", TRUE)
+                checkboxInput("use_unigram", "Use unigram in backoff", TRUE)
               ),
               
               mainPanel(

@@ -1,6 +1,6 @@
 ### User Interface
 
-The user interface presents a textbox where can enter text to predict the next word. As soon as you type a space, the top five predictions are presented. If the prediction was correct, you can select the next word directly by clicking on it.
+The user interface presents a textbox where can enter text to predict the next word. As soon as you type a space, the top prediction (marked with a "chevron" icon) and up to four more words are presented. If the prediction was correct, you can select the next word directly by clicking on it.
 
 A wordcloud chart is also displayed with the words predicted.  
 

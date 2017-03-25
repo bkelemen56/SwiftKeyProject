@@ -878,6 +878,7 @@ predict_words <- function(model,
   
   
   dt_words <- dt_words[model[[1]], word := i.word, on = "id_word"][, .(word, prob)]   
+  dt_words <- dt_words[!(word %in% bad_words)]  # just in case
   if (nrow(dt_words) > 0) {
     setkey(dt_words, word)
   }

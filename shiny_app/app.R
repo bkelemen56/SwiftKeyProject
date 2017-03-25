@@ -47,7 +47,7 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(
   tabItems(
     tabItem(tabName = "start",
-            includeMarkdown("welcome.rmd")
+            includeMarkdown("welcome.Rmd")
     ),
     
     tabItem(tabName = "predict_word",
@@ -76,7 +76,7 @@ body <- dashboardBody(
     ),
     
     tabItem(tabName = "help_doc",
-            includeMarkdown("help.rmd")
+            includeMarkdown("help.Rmd")
     )
   )
 )
@@ -117,8 +117,6 @@ server <- function(input, output, session) {
       text_to_predict <- paste(clean_text_split[(m - 2):m], collapse = " ")
     }
     
-    #cat("text to predict: '", text_to_predict, "'\n")
-    
     predicted_words <- predict_words(model, 
                                      text_to_predict, 
                                      discount_factor = input$discount_factor, 
@@ -131,10 +129,6 @@ server <- function(input, output, session) {
   
   output$prediction <- renderText({
     dt_predic <- do_prediction()
-    
-    # cat(paste('dt_predic typeof = ', typeof(dt_predic)))
-    #if (!is.null(dt_predic)) print(dt_predic)
-    
     if ("data.frame" %in% class(dt_predic)) {
       pretty_fmt_prediction(dt_predic)
     }
@@ -144,9 +138,14 @@ server <- function(input, output, session) {
   
   add_button <- function(i) {
     dt_predic <- do_prediction()
-    
     if ("data.frame" %in% class(dt_predic) && i <= nrow(dt_predic)) {
-      actionButton(paste0("word", i), dt_predic[i]$word, width = "100px")
+      if (i == 1) {
+        flowLayout(
+          actionButton(paste0("word", i), dt_predic[i]$word, width = "100px", icon = icon("chevron-circle-right"))
+        )
+      } else {
+        actionButton(paste0("word", i), dt_predic[i]$word, width = "100px") 
+      }
     }
   }
   

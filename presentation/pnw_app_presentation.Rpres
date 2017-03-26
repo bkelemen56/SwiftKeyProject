@@ -1,14 +1,13 @@
 yawpr
 ========================================================
 author: Bill Kelemen
-date: March 25, 2017
+date: March 26, 2017
 autosize: true
 css: custom.css
 
 yawpr will transform your typing
 ========================================================
 
-<small>
 <b>yawpr</b> (yet another word predictor for R) is the ultimate prediction algorithm implemented in the R language. 
 It was developed to allow fast real-time word predictions within a simple user interface.
 
@@ -21,13 +20,11 @@ Key features of the algorithm:
 - Fast prediction of the next word (and up to four more)
 
 As we continue to develop the algorithm, we're seeking early investors in the company to fund more advanced prediction algorithms. Please contact [me directly](mailto:bill@kelemen-usa.com?Subject=Interested%20in%20yawpr) for more information.
-</small>
 
-how does it work?
+How does it work?
 ========================================================
-
 <small>
-<b>yawpr</b> is a machine learning algorithm based on a modified version from the [N-gram Language Models and <i>Stupid Backoff</i>] (http://www.aclweb.org/anthology/D07-1090.pdf) paper. The model is trained on 1, 2, 3 and 4-gram's, where each n-gram (w[n] w[n-1] ... w[2] w[1], w[i] = word) is divided into the <i>root</i> (w[n] w[n-1] ... w[2]) and the last <i>word</i> (w[1]). Sample probabilities are then computed for all n-grams: p(<i>word</i>|<i>root</i>) = count(<i>word</i>|<i>root</i>) / count(<i>word</i>).
+<b>yawpr</b> is a machine learning algorithm based on a modified version from the [N-gram Language Models and <i>Stupid Backoff</i>] (http://www.aclweb.org/anthology/D07-1090.pdf) paper. The model is trained on 1, 2, 3 and 4-gram's, where each n-gram (w<sub>n</sub> w<sub>n-1</sub> ... w<sub>2</sub> w<sub>1</sub>, w<sub>i</sub> = word) is divided into the <i>root</i> (w<sub>n</sub> w<sub>n-1</sub> ... w<sub>2</sub>) and the last <i>word</i> (w<sub>1</sub>). Sample probabilities are then computed for all n-grams: p(<i>word</i>|<i>root</i>) = count(<i>word</i>|<i>root</i>) / count(<i>root</i>).
 
 The model is trained on 80% from a corpus of 4 million lines and 100 million words, while the remaining 20% is reserved for testing and validation datasets (10% each). 
 
@@ -38,11 +35,10 @@ To predict the next word, a search is initiated at the highest n-gram model depe
 Finally, optimization in memory utilization and speed are implemented by using the `data.table` `R` package (with indices), encoding words as integers and hashing n-grams roots.
 </small>
 
-how well does it predict?
+How well does it predict?
 ========================================================
 
-<small>
-<b>yawpr</b> has an accuracy prediction between 22-28% when tested against a randomly selected dataset not used during training. An acccurate prediction is defined as "one of the top five word predicted matches the the actual next word". 
+<b>yawpr</b> has an accuracy prediction between 22-28% when tested against a randomly selected dataset not used during training. An accurate prediction is defined as "one of the top five word predicted matches the actual next word". 
 
 Multiple models were created with varying sized datasets from the overall training dataset. These models were then validated against a section of the test dataset (due to computing restrictions). The following table displays the accuracies obtained on each:
 
@@ -57,19 +53,17 @@ model-5-0.001-f.cache | 64%           | 0.2825287 | 1.4 Gb |
 model-5-0.001-g.cache | 100%          | 0.2871375 | 1.6 Gb |
 
 This model can be further improved by using more advanced NLP algorithms. Time did not allow to explore these during this project.
-</small>
 
-can't wait...how do you test yawpr?
+Can't wait...how do you test yawpr?
 ========================================================
 
-<small>
 To test <b>yawpr</b> directly, click on this [link](https://bkelemen.shinyapps.io/pnw_app/). The application is self-contained in a multi-page web site that offers, in addition to the prediction algorithm, extensive help and links to the the R open source code.
 <p>
 "Predict words" menu item is where the action is! You can enter text in the provided textbox. As soon as you type a space, the top five predictions are presented. If the prediction was correct, you can select the next word directly by clicking on it. Example:
 
-<img src = "yawpr.png" alt = "yawpr screen shot" width = "550"" height = "350"> 
+<img src = "yawpr.png" alt = "yawpr screen shot" width = "500"" height = "300"> 
 
 If you want to tweak the model, you can play around with the <i>discount_factor</i> as well as "use unigrams in backoff" options. 
 
 Enjoy!
-</small>
+

@@ -10,7 +10,7 @@ Two technical options (fully described in the “Algorithm” section below) are
 
 ### Algorithm
 
-**yawpr** is a machine learning algorithm based on a modified version from the [N-gram Language Models and <i>Stupid Backoff</i>] (http://www.aclweb.org/anthology/D07-1090.pdf) paper. The model is trained on 1, 2, 3 and 4-gram's, where each n-gram (w[n] w[n-1] ... w[2] w[1], w[i] = word) is divided into the <i>root</i> (w[n] w[n-1] ... w[2]) and the last <i>word</i> (w[1]). Sample probabilities are then computed for all n-grams: p(<i>word</i>|<i>root</i>) = count(<i>word</i>|<i>root</i>) / count(<i>word</i>).
+**yawpr** is a machine learning algorithm based on a modified version from the [N-gram Language Models and <i>Stupid Backoff</i>] (http://www.aclweb.org/anthology/D07-1090.pdf) paper. The model is trained on 1, 2, 3 and 4-gram's, where each n-gram (w[n] w[n-1] ... w[2] w[1], w[i] = word) is divided into the <i>root</i> (w[n] w[n-1] ... w[2]) and the last <i>word</i> (w[1]). Sample probabilities are then computed for all n-grams: p(<i>word</i>|<i>root</i>) = count(<i>word</i>|<i>root</i>) / count(<i>root</i>).
 
 The model is trained on 80% from a corpus of 4 million lines and 100 million words, while the remaining 20% is reserved for testing and validation datasets (10% each). 
 

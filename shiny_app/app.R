@@ -28,7 +28,7 @@ model_fname <- paste0(MODEL_ID, ".001-c.cache")
 # shiny UI
 # ---------------------------------------------------------------------
 
-header <- dashboardHeader(title = "yawmr")
+header <- dashboardHeader(title = "yawpr")
 
 ## Sidebar content
 sidebar <- dashboardSidebar(

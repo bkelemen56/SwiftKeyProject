@@ -1,0 +1,43 @@
+/* heading for slides with two hashes ## */
+
+.reveal .slides section .slideContent h2 {
+   font-size: 30px;
+   font-weight: bold;
+}
+
+.reveal p,
+.reveal table,
+.reveal ol,
+.reveal ul {
+   font-size: 15pt;
+}
+
+.reveal ol,
+.reveal ul {
+   padding: 10px 10px 0px;
+}
+
+/* sub and sup styles */
+.reveal section sub,
+.reveal section sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+.reveal section sup {
+  top: -0.5em;
+}
+
+.reveal section sub {
+  bottom: -0.25em;
+}
+
+/* slide titles */
+.reveal h3 { 
+  font-size: 40px;
+   font-weight: bold;
+   color: dark-blue;
+}
+

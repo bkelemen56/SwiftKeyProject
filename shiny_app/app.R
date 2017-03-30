@@ -54,7 +54,7 @@ body <- dashboardBody(
             fluidRow(
               sidebarPanel(
                 textAreaInput("text", 
-                              "As you type here, the predictions will appear to the right, from where you can select the next word.", 
+                              "Type here and press space to predict the next words. You can then select from these words or type another.", 
                               "", width = "250px", height = "300px"),
                 sliderInput("discount_factor", "Backoff discount factor:", min = 0, max = 1, value = .5),
                 checkboxInput("use_unigram", "Use unigram in backoff", TRUE)
@@ -173,8 +173,23 @@ server <- function(input, output, session) {
   # process add buttons for predicted words
   
   update_text <- function(i) {
+    
+    # from ?toupper
+    .simpleCap <- function(x) {
+      s <- strsplit(x, " ")[[1]]
+      paste(toupper(substring(s, 1, 1)), substring(s, 2),
+            sep = "", collapse = " ")
+    }
+    
+    # if start of sentence, capitalize first letter
     dt_predic <- do_prediction()
-    updateTextAreaInput(session, inputId = "text", value = paste0(input$text, dt_predic[i]$word, " "))
+    if (endsWith(trimws(input$text), ".") || input$text == "") {
+      word <- .simpleCap(dt_predic[i]$word)
+    } else {
+      word <- dt_predic[i]$word
+    }
+    
+    updateTextAreaInput(session, inputId = "text", value = paste0(input$text, word, " "))
   }
   
   observeEvent(input$word1, { update_text(1) })

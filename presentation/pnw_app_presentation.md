@@ -23,7 +23,7 @@ As we continue to develop the algorithm, we're seeking early investors in the co
 
 How does it work?
 ========================================================
-<small>
+
 <b>yawpr</b> is a machine learning algorithm based on a modified version from the [N-gram Language Models and <i>Stupid Backoff</i>] (http://www.aclweb.org/anthology/D07-1090.pdf) paper. The model is trained on 1, 2, 3 and 4-gram's, where each n-gram (w<sub>n</sub> w<sub>n-1</sub> ... w<sub>2</sub> w<sub>1</sub>, w<sub>i</sub> = word) is divided into the <i>root</i> (w<sub>n</sub> w<sub>n-1</sub> ... w<sub>2</sub>) and the last <i>word</i> (w<sub>1</sub>). Sample probabilities are then computed for all n-grams: p(<i>word</i>|<i>root</i>) = count(<i>word</i>|<i>root</i>) / count(<i>root</i>).
 
 The model is trained on 80% from a corpus of 4 million lines and 100 million words, while the remaining 20% is reserved for testing and validation datasets (10% each). 
@@ -33,7 +33,7 @@ The training dataset is cleaned (removing obscene words, special characters, URL
 To predict the next word, a search is initiated at the highest n-gram model depending on the <i>root</i> already seen. The highest probability <i>words</i> following the <i>root</i> matching the n-1 words already seen are selected. In doing so, a new probability is calculated by discounting the word count by a <i>discount_factor</i> (parameter to the algorithm). The algorithm recursively moves to the lower order n-gram (by removing the fist word from the <i>root</i>) and repeating the search. A smoothing parameter is applied for lower level probabilities. As we descend the n-gram levels, the search is optimized by only selecting words that could improve the prediction and have not been predicted yet.
 
 Finally, optimization in memory utilization and speed are implemented by using the `data.table` `R` package (with indices), encoding words as integers and hashing n-grams roots.
-</small>
+
 
 How well does it predict?
 ========================================================

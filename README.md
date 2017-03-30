@@ -1,10 +1,3 @@
----
-title: "README"
-author: "Bill Kelemen"
-date: "3/29/2017"
-output: html_document
----
-
 ## Welcome to yawmr!
 
 **yawpr** (yet another word predictor for R) is the ultimate prediction algorithm implemented in the `R` language. 

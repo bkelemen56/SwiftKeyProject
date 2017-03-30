@@ -10,6 +10,8 @@ Key features of the program:
 - Fast prediction of the next word
 - Simple user interface
 
-The application is accessible at http://bkelemen.shinyapps.io/pnw_app 
+Exploratory data analysis is available at https://rpubs.com/bkelemen/swift_key_report_1.
+
+The application is accessible at http://bkelemen.shinyapps.io/pnw_app.
 
 Enjoy!

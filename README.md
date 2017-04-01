@@ -1,4 +1,4 @@
-## Welcome to yawmr!
+## Welcome to yawpr!
 
 **yawpr** (yet another word predictor for R) is the ultimate prediction algorithm implemented in the `R` language. 
 
